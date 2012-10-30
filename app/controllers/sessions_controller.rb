@@ -4,15 +4,22 @@ class SessionsController < ApplicationController
  end
  
  def create
-	user = User.find_by_email(params[:session][:email])
- 	if user && user.authenticate(params[:session][:password])
+	user = User.find_by_email(params[:email])
+ 	if user && user.authenticate(params[:password])
  		#Sign the user in and redirect to the user's show page.
- 		sign_in user
+ 	#	if  params[:remember_me]
+	#		cookies.permanent[:remember_token] = user.remember_token	
+#		else
+#			cookies[:remember_token] = user.remember_token				
+#		end
+		
+ 		sign_in user, persist: params[:remember_me]
  		redirect_back_or user
-	 else
+	else
 	 	flash.now[:error] = 'Invalid email/password combination'  
 	 	render 'new'
-	 	end
+ 	end
+ 
  end
 
  def destroy

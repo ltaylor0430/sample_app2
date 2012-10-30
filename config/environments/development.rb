@@ -32,6 +32,21 @@ SampleApp2::Application.configure do
   # Do not compress assets
   config.assets.compress = false
 
+  #Get mailers to work
+  config.action_mailer.default_url_options = { :host => "localhost:3000" }
+  config.action_mailer.raise_delivery_errors = true
+  config.action_mailer.perform_deliveries = true
   # Expands the lines which load the assets
   config.assets.debug = true
+
+  ActionMailer::Base.delivery_method = :smtp
+  ActionMailer::Base.smtp_settings = {
+    :address        => 'smtp.gmail.com',
+    :domain         => 'gmail',
+    :port           => 587,
+    :user_name      => '',
+    :password       => '',
+    :authentication => :plain,
+    :enable_starttls_auto => true
+  }
 end

@@ -38,7 +38,9 @@ describe User do
   it { should_not be_admin}
   
   describe "with admin attribute set to true" do
-    before{ @user.toggle!(:admin)}
+    before{ 
+      @user.save!
+      @user.toggle!(:admin)}
     it { should be_admin }
   end
   describe "when name is not present" do
@@ -130,8 +132,24 @@ describe User do
   
   end
  
+  describe "relationships associations" do
+    let!(:followed_user) { FactoryGirl.create(:user) }
+    before do 
+      @user.save 
+      @user.follow!(followed_user)
+    end
+    
+    it "should destroy associated relationships" do
+      relationships = @user.relationships
+      @user.destroy
+      relationships.each do |relationship|
+        Relationship.find_by_id(relationship.followed_id).should be_nil
+      end
+    end
+  end
+
   describe "micropost associations" do
-    before {@user.save}
+    before { @user.save }
     let!(:older_micropost) do
       FactoryGirl.create(:micropost, user: @user, created_at: 1.day.ago)
     end
@@ -186,5 +204,24 @@ describe User do
       its(:followed_users) { should_not include(other_user) }
     end
   end
-
+  describe "email" do
+    let(:user) { FactoryGirl.create(:user) }
+ 
+   it "generates a unique password_reset_token each time" do  
+      user.send_password_reset  
+      last_token = user.password_reset_token  
+      user.send_password_reset  
+      user.password_reset_token.should_not eq(last_token)  
+    end  
+  
+    it "saves the time the password reset was sent" do  
+      user.send_password_reset  
+      user.reload.password_reset_sent_at.should be_present  
+    end  
+  
+    it "delivers email to user" do  
+      user.send_password_reset  
+      last_email.to_s.should include (user.email)  
+    end  
+  end
 end

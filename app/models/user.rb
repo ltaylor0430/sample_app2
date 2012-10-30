@@ -22,8 +22,8 @@ class User < ActiveRecord::Base
   has_many :followers, through: :reverse_relationship, source: :follower          
   has_many :followed_users, through: :relationships, source: :followed
 
-  before_save { |user| user.email =  email.downcase}
-  before_save :create_remember_token
+  before_save { |user| user.email = email.downcase}
+  before_save { generate_token(:remember_token) }
   validates :name,  presence: true, 
   					length: { maximum: 50 }
  
@@ -34,7 +34,13 @@ class User < ActiveRecord::Base
 
   validates :password, length: { minimum: 6}
   validates :password_confirmation, presence: true
-
+  
+  def send_password_reset
+    generate_token(:password_reset_token)
+    self.password_reset_sent_at = Time.new
+    save!(validate:false)
+    UserMailer.password_reset(self).deliver()
+  end
   def feed
     #This is preliminary. See "following users"
     Micropost.from_users_followed_by(self)
@@ -52,8 +58,13 @@ class User < ActiveRecord::Base
     relationships.find_by_followed_id(other_user.id).destroy
   end
 
+
   private
-    def create_remember_token
-      self.remember_token = SecureRandom.urlsafe_base64
+    def generate_token(column)
+      begin
+        self[column] = SecureRandom.urlsafe_base64
+      end while User.exists?(column => self[column])
     end
+
+
 end
