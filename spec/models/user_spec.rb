@@ -38,7 +38,9 @@ describe User do
   it { should_not be_admin}
   
   describe "with admin attribute set to true" do
-    before{ @user.toggle!(:admin)}
+    before{ 
+      @user.save!
+      @user.toggle!(:admin)}
     it { should be_admin }
   end
   describe "when name is not present" do
@@ -202,5 +204,24 @@ describe User do
       its(:followed_users) { should_not include(other_user) }
     end
   end
-
+  describe "email" do
+    let(:user) { FactoryGirl.create(:user) }
+ 
+   it "generates a unique password_reset_token each time" do  
+      user.send_password_reset  
+      last_token = user.password_reset_token  
+      user.send_password_reset  
+      user.password_reset_token.should_not eq(last_token)  
+    end  
+  
+    it "saves the time the password reset was sent" do  
+      user.send_password_reset  
+      user.reload.password_reset_sent_at.should be_present  
+    end  
+  
+    it "delivers email to user" do  
+      user.send_password_reset  
+      last_email.to_s.should include (user.email)  
+    end  
+  end
 end

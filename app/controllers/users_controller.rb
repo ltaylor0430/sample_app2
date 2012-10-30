@@ -20,7 +20,8 @@ class UsersController < ApplicationController
     unless signed_in?
     	@user = User.new(params[:user])
     	if @user.save
-        sign_in @user
+       
+        sign_in @user, persist: false
     		#Handle a successful save.
     		flash[:success] = "Welcome to the Sample App"
     		redirect_to @user
